@@ -1,4 +1,9 @@
-module AddCallStack.Plugin (someFunc) where
+module AddCallStack.Plugin (plugin) where
 
-someFunc :: IO ()
-someFunc = putStrLn "someFunc"
+import GHC.Plugins (CommandLineOption, Hsc, ModSummary, ParsedResult, Plugin (parsedResultAction), defaultPlugin)
+
+plugin :: Plugin
+plugin = defaultPlugin{parsedResultAction = commandLinePlugin}
+
+commandLinePlugin :: [CommandLineOption] -> ModSummary -> ParsedResult -> Hsc ParsedResult
+commandLinePlugin = undefined

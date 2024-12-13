@@ -102,3 +102,6 @@ test-suite add-call-stack-test
     build-depends:
         base ^>=4.20.0.0,
         add-call-stack
+
+    ghc-options:
+      -fplugin=AddCallStack.Plugin

@@ -33,6 +33,7 @@ import GHC (
   Located,
   Match,
   MatchGroup,
+  NoExtField (NoExtField),
   PromotionFlag (NotPromoted),
   Sig (TypeSig),
   XRec,
@@ -114,12 +115,14 @@ updateHsSigType f sigtype@HsSig{} = sigtype{sig_body = f sigtype.sig_body}
 updateLhsType :: Updator (HsType GhcPs) (LHsType GhcPs)
 updateLhsType f lhsType = fmap f lhsType
 
--- TODO: Investigate updating other types
+wrapInHsQualTy :: HsType GhcPs -> HsType GhcPs
+wrapInHsQualTy typ = HsQualTy NoExtField (reLoc (noLoc (addHasCallStack []))) (reLoc (noLoc typ))
+
 updateHsType :: HsType GhcPs -> HsType GhcPs
 updateHsType typ@(HsQualTy _ ctxt _)
   | containsHasCallStack (unLoc ctxt) = typ
   | otherwise = typ{hst_ctxt = fmap addHasCallStack ctxt}
-updateHsType typ = typ
+updateHsType typ = wrapInHsQualTy typ
 
 addHasCallStack :: HsContext GhcPs -> HsContext GhcPs
 addHasCallStack hsctxt = mkHasCallStack : hsctxt

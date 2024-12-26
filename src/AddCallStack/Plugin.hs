@@ -4,8 +4,73 @@ module AddCallStack.Plugin (plugin) where
 
 import Control.Monad.IO.Class (liftIO)
 import Data.Maybe (catMaybes)
-import GHC (Anno, GRHSs, GenLocated (L), GhcPass, GhcPs, HsBind, HsBindLR (FunBind), HsContext, HsDecl (SigD, ValD), HsLocalBinds, HsLocalBindsLR (HsValBinds), HsModule (hsmodDecls), HsParsedModule (HsParsedModule, hpm_module), HsSigType (HsSig), HsType (HsQualTy, HsTyVar, hst_ctxt), HsValBindsLR (ValBinds), HsWildCardBndrs (hswc_body), IdP, LHsDecl, LHsExpr, LHsLocalBinds, LHsSigType, LHsSigWcType, LHsType, LIdP, LMatch, LSig, Located, MapXRec (mapXRec), Match, MatchGroup (MG), NoEpAnns (NoEpAnns), NoExtField (NoExtField), PromotionFlag (NotPromoted), Sig (TypeSig), UnXRec (unXRec), XRec, XSigD, fun_matches, getLoc, grhssLocalBinds, m_grhss, mg_alts, mkModuleName, noLoc, putMsgM, reLoc, sig_body, typecheckModule, unLoc, wrapXRec)
-import GHC.Plugins (CommandLineOption, Hsc, ModSummary, ParsedResult (ParsedResult, parsedResultModule), Plugin (parsedResultAction), defaultPlugin, mkClsOcc, mkRdrQual, mkRdrUnqual, putMsg, putMsgS, typeSize)
+import GHC (
+  Anno,
+  GRHSs,
+  GenLocated (L),
+  GhcPass,
+  GhcPs,
+  HsBind,
+  HsBindLR (FunBind),
+  HsContext,
+  HsDecl (SigD, ValD),
+  HsLocalBinds,
+  HsLocalBindsLR (HsValBinds),
+  HsModule (hsmodDecls),
+  HsParsedModule (HsParsedModule, hpm_module),
+  HsSigType (HsSig),
+  HsType (HsQualTy, HsTyVar, hst_ctxt),
+  HsValBindsLR (ValBinds),
+  HsWildCardBndrs (hswc_body),
+  IdP,
+  LHsDecl,
+  LHsExpr,
+  LHsLocalBinds,
+  LHsSigType,
+  LHsSigWcType,
+  LHsType,
+  LIdP,
+  LMatch,
+  LSig,
+  Located,
+  MapXRec (mapXRec),
+  Match,
+  MatchGroup (MG),
+  NoEpAnns (NoEpAnns),
+  NoExtField (NoExtField),
+  PromotionFlag (NotPromoted),
+  Sig (TypeSig),
+  UnXRec (unXRec),
+  XRec,
+  XSigD,
+  fun_matches,
+  getLoc,
+  grhssLocalBinds,
+  m_grhss,
+  mg_alts,
+  mkModuleName,
+  noLoc,
+  putMsgM,
+  reLoc,
+  sig_body,
+  typecheckModule,
+  unLoc,
+  wrapXRec,
+ )
+import GHC.Plugins (
+  CommandLineOption,
+  Hsc,
+  ModSummary,
+  ParsedResult (ParsedResult, parsedResultModule),
+  Plugin (parsedResultAction),
+  defaultPlugin,
+  mkClsOcc,
+  mkRdrQual,
+  mkRdrUnqual,
+  putMsg,
+  putMsgS,
+  typeSize,
+ )
 import GHC.Tc.Errors.Types (HsTypeOrSigType (HsType))
 import Language.Haskell.Syntax.Module.Name (ModuleName)
 
@@ -86,10 +151,12 @@ updateHsBind :: Updator (LHsSigWcType GhcPs) (HsBind GhcPs)
 updateHsBind f bind@FunBind{} = bind{fun_matches = updateMatchGroup f bind.fun_matches}
 updateHsBind _ bind = bind
 
-updateMatchGroup :: Updator (LHsSigWcType GhcPs) (MatchGroup GhcPs (LHsExpr GhcPs))
+updateMatchGroup ::
+  Updator (LHsSigWcType GhcPs) (MatchGroup GhcPs (LHsExpr GhcPs))
 updateMatchGroup f mg = mg{mg_alts = updateLLMatch f (mg_alts mg)}
 
-updateLLMatch :: Updator (LHsSigWcType GhcPs) (XRec GhcPs [LMatch GhcPs (LHsExpr GhcPs)])
+updateLLMatch ::
+  Updator (LHsSigWcType GhcPs) (XRec GhcPs [LMatch GhcPs (LHsExpr GhcPs)])
 updateLLMatch f lmatches = fmap (updateLMatches f) lmatches
 
 updateLMatches :: Updator (LHsSigWcType GhcPs) [LMatch GhcPs (LHsExpr GhcPs)]
@@ -126,11 +193,23 @@ plugin :: Plugin
 plugin = defaultPlugin{parsedResultAction = commandLinePlugin}
 
 updateModuleLhsType :: Updator (HsType GhcPs) (ParsedResult)
-updateModuleLhsType = updateParsedResult . updateParsedModule . updateLocHsModule . updateHsModule . updateLhsModDecls . updateLhsModDecl . updateHsDecl . updateLhsSigWcType . updateLhsSigType . updateHsSigType . updateLhsType
+updateModuleLhsType =
+  updateParsedResult
+    . updateParsedModule
+    . updateLocHsModule
+    . updateHsModule
+    . updateLhsModDecls
+    . updateLhsModDecl
+    . updateHsDecl
+    . updateLhsSigWcType
+    . updateLhsSigType
+    . updateHsSigType
+    . updateLhsType
 
 addAllHasCallStack :: ParsedResult -> ParsedResult
 addAllHasCallStack = updateModuleLhsType updateHsType
 
 -- | Adds the HasCallStack to the parsed function bindings
-commandLinePlugin :: [CommandLineOption] -> ModSummary -> ParsedResult -> Hsc ParsedResult
+commandLinePlugin ::
+  [CommandLineOption] -> ModSummary -> ParsedResult -> Hsc ParsedResult
 commandLinePlugin _ modSummary parsedResult = return (addAllHasCallStack parsedResult)

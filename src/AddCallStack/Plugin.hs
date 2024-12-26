@@ -19,12 +19,15 @@ import GHC (
   HsValBindsLR (ValBinds),
   HsWildCardBndrs (hswc_body),
   IdP,
+  ImportDecl,
+  ImportDeclQualifiedStyle (QualifiedPre),
   LHsDecl,
   LHsExpr,
   LHsSigType,
   LHsSigWcType,
   LHsType,
   LIdP,
+  LImportDecl,
   LMatch,
   LSig,
   Located,
@@ -36,12 +39,16 @@ import GHC (
   fun_matches,
   getLoc,
   grhssLocalBinds,
+  hsmodImports,
+  ideclAs,
+  ideclQualified,
   m_grhss,
   mg_alts,
   mkModuleName,
   noLoc,
   reLoc,
   sig_body,
+  simpleImportDecl,
   unLoc,
  )
 import GHC.Plugins (
@@ -192,7 +199,29 @@ updateModuleLhsType =
 addAllHasCallStack :: ParsedResult -> ParsedResult
 addAllHasCallStack = updateModuleLhsType updateHsType
 
+unqualifiedImport :: ImportDecl (GhcPs)
+unqualifiedImport = simpleImportDecl (mkModuleName "GHC.Stack")
+
+qualifiedImport :: ImportDecl (GhcPs)
+qualifiedImport =
+  unqualifiedImport
+    { ideclQualified = QualifiedPre
+    , ideclAs = Just $ reLoc (noLoc renamedGhcStackImport)
+    }
+
+ghcStackImport :: (LImportDecl (GhcPs))
+ghcStackImport = reLoc (noLoc qualifiedImport)
+
+importGhcStack :: HsModule GhcPs -> HsModule GhcPs
+importGhcStack hsm = hsm{hsmodImports = ghcStackImport : hsm.hsmodImports}
+
+updateImports' :: Updator (HsModule GhcPs) ParsedResult
+updateImports' = updateParsedResult . updateParsedModule . updateLocHsModule
+
+updateImports :: ParsedResult -> ParsedResult
+updateImports = updateImports' importGhcStack
+
 -- | Adds the HasCallStack to the parsed function bindings
 commandLinePlugin ::
   [CommandLineOption] -> ModSummary -> ParsedResult -> Hsc ParsedResult
-commandLinePlugin _ modSummary parsedResult = return (addAllHasCallStack parsedResult)
+commandLinePlugin _ modSummary parsedResult = return (updateImports (addAllHasCallStack parsedResult))

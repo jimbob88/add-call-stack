@@ -125,8 +125,11 @@ containsHasCallStack = any (hasCallStack . unLoc)
 plugin :: Plugin
 plugin = defaultPlugin{parsedResultAction = commandLinePlugin}
 
+updateModuleLhsType :: Updator (HsType GhcPs) (ParsedResult)
+updateModuleLhsType = updateParsedResult . updateParsedModule . updateLocHsModule . updateHsModule . updateLhsModDecls . updateLhsModDecl . updateHsDecl . updateLhsSigWcType . updateLhsSigType . updateHsSigType . updateLhsType
+
 addAllHasCallStack :: ParsedResult -> ParsedResult
-addAllHasCallStack = updateParsedResult (updateParsedModule (updateLocHsModule (updateHsModule (updateLhsModDecls (updateLhsModDecl (updateHsDecl (updateLhsSigWcType (updateLhsSigType (updateHsSigType (updateLhsType updateHsType))))))))))
+addAllHasCallStack = updateModuleLhsType updateHsType
 
 -- | Adds the HasCallStack to the parsed function bindings
 commandLinePlugin :: [CommandLineOption] -> ModSummary -> ParsedResult -> Hsc ParsedResult

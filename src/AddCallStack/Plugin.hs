@@ -2,13 +2,9 @@
 
 module AddCallStack.Plugin (plugin) where
 
-import Control.Monad.IO.Class (liftIO)
-import Data.Maybe (catMaybes)
 import GHC (
-  Anno,
   GRHSs,
   GenLocated (L),
-  GhcPass,
   GhcPs,
   HsBind,
   HsBindLR (FunBind),
@@ -17,7 +13,7 @@ import GHC (
   HsLocalBinds,
   HsLocalBindsLR (HsValBinds),
   HsModule (hsmodDecls),
-  HsParsedModule (HsParsedModule, hpm_module),
+  HsParsedModule (hpm_module),
   HsSigType (HsSig),
   HsType (HsQualTy, HsTyVar, hst_ctxt),
   HsValBindsLR (ValBinds),
@@ -25,7 +21,6 @@ import GHC (
   IdP,
   LHsDecl,
   LHsExpr,
-  LHsLocalBinds,
   LHsSigType,
   LHsSigWcType,
   LHsType,
@@ -33,16 +28,11 @@ import GHC (
   LMatch,
   LSig,
   Located,
-  MapXRec (mapXRec),
   Match,
-  MatchGroup (MG),
-  NoEpAnns (NoEpAnns),
-  NoExtField (NoExtField),
+  MatchGroup,
   PromotionFlag (NotPromoted),
   Sig (TypeSig),
-  UnXRec (unXRec),
   XRec,
-  XSigD,
   fun_matches,
   getLoc,
   grhssLocalBinds,
@@ -50,28 +40,21 @@ import GHC (
   mg_alts,
   mkModuleName,
   noLoc,
-  putMsgM,
   reLoc,
   sig_body,
-  typecheckModule,
   unLoc,
-  wrapXRec,
  )
 import GHC.Plugins (
   CommandLineOption,
   Hsc,
   ModSummary,
-  ParsedResult (ParsedResult, parsedResultModule),
+  ParsedResult (parsedResultModule),
   Plugin (parsedResultAction),
   defaultPlugin,
   mkClsOcc,
   mkRdrQual,
   mkRdrUnqual,
-  putMsg,
-  putMsgS,
-  typeSize,
  )
-import GHC.Tc.Errors.Types (HsTypeOrSigType (HsType))
 import Language.Haskell.Syntax.Module.Name (ModuleName)
 
 type Updator a s = (a -> a) -> s -> s

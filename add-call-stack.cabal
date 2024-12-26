@@ -105,3 +105,18 @@ test-suite add-call-stack-test
 
     ghc-options:
       -fplugin=AddCallStack.Plugin
+
+executable example
+    import:           warnings
+    default-language: GHC2024
+    hs-source-dirs:   example
+    main-is:          Example.hs
+
+    build-depends:
+        base ^>=4.20.0.0,
+        add-call-stack
+
+    ghc-options:
+      -fplugin=AddCallStack.Plugin
+
+

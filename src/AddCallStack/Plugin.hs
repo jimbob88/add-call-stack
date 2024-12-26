@@ -61,7 +61,7 @@ updateLhsType f lhsType = fmap f lhsType
 
 -- TODO: Investigate updating other types
 updateHsType :: HsType GhcPs -> HsType GhcPs
-updateHsType typ@(HsQualTy xqual ctxt body)
+updateHsType typ@(HsQualTy _ ctxt _)
   | containsHasCallStack (unLoc ctxt) = typ
   | otherwise = typ{hst_ctxt = fmap addHasCallStack ctxt}
 updateHsType typ = typ
@@ -124,21 +124,6 @@ containsHasCallStack = any (hasCallStack . unLoc)
 
 plugin :: Plugin
 plugin = defaultPlugin{parsedResultAction = commandLinePlugin}
-
-isSignature :: HsDecl p -> Bool
-isSignature (SigD _ _) = True
-isSignature _ = False
-
-extractDeclFromLhs :: LHsDecl (GhcPass p) -> HsDecl (GhcPass p)
-extractDeclFromLhs lhsdecl = unLoc lhsdecl
-
-extractSig :: HsDecl p -> Maybe (Sig p)
-extractSig (SigD _ sig) = Just sig
-extractSig _ = Nothing
-
-extractTypeSig :: Sig p -> Maybe [LIdP p]
-extractTypeSig (TypeSig _ lidps _) = Just lidps
-extractTypeSig _ = Nothing
 
 addAllHasCallStack :: ParsedResult -> ParsedResult
 addAllHasCallStack = updateParsedResult (updateParsedModule (updateLocHsModule (updateHsModule (updateLhsModDecls (updateLhsModDecl (updateHsDecl (updateLhsSigWcType (updateLhsSigType (updateHsSigType (updateLhsType updateHsType))))))))))

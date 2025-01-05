@@ -1,6 +1,9 @@
 # AddCallStack
 This is a simple GHC plugin which adds the `HasCallStack` qualifier to every function to your source code. This is a ground-up rewrite of [haskell-stack-trace-plugin](https://github.com/waddlaw/haskell-stack-trace-plugin) for `GHC2024`, due to differences in the way the GHC AST is built.
 
+## Important Note
+I have now backported the fixes for GHC 9 into [waddlaw/haskell-stack-trace-plugin](https://github.com/waddlaw/haskell-stack-trace-plugin) via [#20](https://github.com/waddlaw/haskell-stack-trace-plugin/pull/20). If you need a plugin which has backwards compatibility with GHC 8, use this version.
+
 ## Example
 ### Example Code
 ```haskell
